@@ -61,20 +61,18 @@ class BaseModelCardField(abc.ABC):
             getattr(proto, field_name).add().CopyFrom(nested_message.to_proto())  # pylint: disable=protected-access
         else:
           getattr(proto, field_name).CopyFrom(field_value.to_proto())  # pylint: disable=protected-access
-      # Process Non-Message type
+      elif field_descriptor.label == descriptor.FieldDescriptor.LABEL_REPEATED:
+        getattr(proto, field_name).extend(field_value)
       else:
-        if field_descriptor.label == descriptor.FieldDescriptor.LABEL_REPEATED:
-          getattr(proto, field_name).extend(field_value)
-        else:
-          setattr(proto, field_name, field_value)
+        setattr(proto, field_name, field_value)
 
     return proto
 
   def _from_proto(self, proto: message.Message) -> "BaseModelCardField":
     """Convert proto to this class object."""
     if not isinstance(proto, self._proto_type):
-      raise TypeError("%s is expected. However %s is provided." %
-                      (self._proto_type, type(proto)))
+      raise TypeError(
+          f"{self._proto_type} is expected. However {type(proto)} is provided.")
 
     for field_descriptor in proto.DESCRIPTOR.fields:
       field_name = field_descriptor.name
@@ -96,12 +94,10 @@ class BaseModelCardField(abc.ABC):
         elif proto.HasField(field_name):
           getattr(self, field_name)._from_proto(getattr(proto, field_name))  # pylint: disable=protected-access
 
-      # Process Non-Message type
-      else:
-        if field_descriptor.label == descriptor.FieldDescriptor.LABEL_REPEATED:
-          setattr(self, field_name, getattr(proto, field_name)[:])
-        elif proto.HasField(field_name):
-          setattr(self, field_name, getattr(proto, field_name))
+      elif field_descriptor.label == descriptor.FieldDescriptor.LABEL_REPEATED:
+        setattr(self, field_name, getattr(proto, field_name)[:])
+      elif proto.HasField(field_name):
+        setattr(self, field_name, getattr(proto, field_name))
 
     return self
 

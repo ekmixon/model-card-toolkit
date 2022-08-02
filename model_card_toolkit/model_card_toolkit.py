@@ -128,9 +128,9 @@ class ModelCardToolkit():
             '%d artifacts are found with the `model_uri`="%s". '
             'The last one is used.', len(models), model_uri)
       self._artifact_with_model_uri = models[-1]
-    elif mlmd_store and not model_uri:
+    elif mlmd_store:
       raise ValueError('If `mlmd_store` is set, `model_uri` should be set.')
-    elif model_uri and not mlmd_store:
+    elif model_uri:
       logging.info('`model_uri` ignored when `mlmd_store` is not set.')
 
   def _jinja_loader(self, template_dir: Text):
